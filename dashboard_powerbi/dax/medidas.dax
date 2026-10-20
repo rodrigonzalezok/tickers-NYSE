@@ -1,0 +1,107 @@
+// =============================================================================
+// Medidas del dashboard. Todas van en la tabla vacía "_Medidas".
+// Para cada una: Herramientas de tabla > Nueva medida > pegar desde el nombre.
+// Entre corchetes al lado de cada una: formato a poner en Herramientas de medidas.
+// =============================================================================
+
+
+// ---------------------------- Carpeta: RRHH ----------------------------------
+
+// [Número entero, separador de miles]
+Empleados = COUNTROWS ( fact_rrhh )
+
+// [Número entero]
+Bajas = SUM ( fact_rrhh[baja] )
+
+// [Porcentaje, 1 decimal]  DIVIDE y no "/": si no hay empleados devuelve vacío, no un error
+Tasa de Rotación = DIVIDE ( [Bajas], [Empleados] )
+
+// [Porcentaje, 1 decimal]  Ignora TODOS los filtros: es la vara contra la que se compara
+Tasa de Rotación (empresa) = CALCULATE ( [Tasa de Rotación], REMOVEFILTERS () )
+
+// [Decimal, 1 decimal]  En puntos porcentuales: +4,5 = 4,5 puntos por encima de la empresa
+Diferencia vs Empresa (pp) = ( [Tasa de Rotación] - [Tasa de Rotación (empresa)] ) * 100
+
+// [Texto]  Para el formato condicional de las barras (Colores > Valor de campo)
+Color Rotación =
+IF ( [Tasa de Rotación] > [Tasa de Rotación (empresa)], "#EB6834", "#C3C2B7" )
+
+// [Moneda o número entero]  El dataset no dice la moneda: en el informe la llamamos "unidades"
+Sueldo Promedio = AVERAGE ( fact_rrhh[sueldo_mensual] )
+
+// [Porcentaje, 0 decimales]
+% Con Horas Extra =
+DIVIDE ( CALCULATE ( [Empleados], fact_rrhh[horas_extra] = "Sí" ), [Empleados] )
+
+// [Porcentaje, 1 decimal]
+Rotación con Horas Extra = CALCULATE ( [Tasa de Rotación], fact_rrhh[horas_extra] = "Sí" )
+
+// [Porcentaje, 1 decimal]
+Rotación sin Horas Extra = CALCULATE ( [Tasa de Rotación], fact_rrhh[horas_extra] = "No" )
+
+// [Decimal, 1 decimal]  "Veces más": cuánto multiplica el riesgo hacer horas extra
+Multiplicador Horas Extra = DIVIDE ( [Rotación con Horas Extra], [Rotación sin Horas Extra] )
+
+// [Decimal, 1 decimal]
+Antigüedad Promedio (años) = AVERAGE ( fact_rrhh[anios_en_empresa] )
+
+
+// ---------------------------- Carpeta: Agro ----------------------------------
+
+// [Número entero, separador de miles]
+Superficie Sembrada (ha) = SUM ( fact_agro[superficie_sembrada_ha] )
+
+// [Número entero, separador de miles]
+Superficie Cosechada (ha) = SUM ( fact_agro[superficie_cosechada_ha] )
+
+// [Número entero, separador de miles]
+Producción (t) = SUM ( fact_agro[produccion_tm] )
+
+// [Número entero, separador de miles]
+// Rendimiento PONDERADO: toneladas totales / hectáreas cosechadas totales.
+// Se excluyen las filas con producción pero sin superficie cosechada informada
+// (cítricos y banana 1969-1975), que si no inflarían el numerador.
+Rendimiento (kg/ha) =
+VAR ProduccionConSuperficie =
+    CALCULATE ( [Producción (t)], fact_agro[superficie_cosechada_ha] > 0 )
+RETURN
+    DIVIDE ( ProduccionConSuperficie * 1000, [Superficie Cosechada (ha)] )
+
+// [Número entero]  SOLO PARA LA CLASE: promedia el rinde de cada fila, como si una
+// parcela de 10 ha pesara lo mismo que una de 300.000 ha. Compárenla con la anterior.
+Rendimiento promedio simple (NO USAR) = AVERAGE ( fact_agro[rendimiento_fila_kgxha] )
+
+// [Porcentaje, 0 decimales]  Avena, centeno y cebada forrajera dan muy bajo:
+// no es pérdida, es que se siembran para pastoreo (se los come el ganado).
+% Cosechado = DIVIDE ( [Superficie Cosechada (ha)], [Superficie Sembrada (ha)] )
+
+// [Número entero, separador de miles]
+// Sin tabla de calendario no hay SAMEPERIODLASTYEAR: movemos el filtro a mano.
+Producción Campaña Anterior =
+VAR AnioActual = SELECTEDVALUE ( dim_campania[anio_inicio] )
+RETURN
+    IF (
+        NOT ISBLANK ( AnioActual ),
+        CALCULATE (
+            [Producción (t)],
+            REMOVEFILTERS ( dim_campania ),
+            dim_campania[anio_inicio] = AnioActual - 1
+        )
+    )
+
+// [Porcentaje, 1 decimal]
+Variación Interanual % =
+DIVIDE ( [Producción (t)] - [Producción Campaña Anterior], [Producción Campaña Anterior] )
+
+// [Texto]  Para el subtítulo de las tarjetas
+Campaña Seleccionada = SELECTEDVALUE ( dim_campania[campania], "Varias campañas" )
+
+// [Porcentaje, 1 decimal]  Peso de lo filtrado sobre el total del país
+Participación en Superficie % =
+DIVIDE (
+    [Superficie Sembrada (ha)],
+    CALCULATE ( [Superficie Sembrada (ha)], REMOVEFILTERS ( dim_geografia ) )
+)
+
+// [Número entero, separador de miles]  Solo para el visual "Soja de primera y de segunda"
+Superficie Sembrada Detalle (ha) = SUM ( fact_agro_detalle[superficie_sembrada_ha] )

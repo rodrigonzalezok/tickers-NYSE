@@ -1,0 +1,472 @@
+<title>Dashboard RRHH y Agro</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: lienzo de informe Power BI — pestañas de página arriba, visuales como tarjetas sobre el plano gris */
+:root {
+  --plane: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #737069;
+  --grid: #e1e0d9; --axis: #c3c2b7; --ring: rgba(11,11,11,0.10);
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --emph-off: #c3c2b7;
+  --seq-lo: #cde2fb; --seq-hi: #5598e7;
+  --good: #006300; --bad: #d03b3b; --tab-on: #0b0b0b;
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --plane: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #9a988f;
+    --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --emph-off: #4a4a46;
+    --seq-lo: #1c3a5e; --seq-hi: #3987e5; --good: #0ca30c; --bad: #e66767; --tab-on: #f0efec;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --plane: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #9a988f;
+  --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --emph-off: #4a4a46;
+  --seq-lo: #1c3a5e; --seq-hi: #3987e5; --good: #0ca30c; --bad: #e66767; --tab-on: #f0efec;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--plane); color: var(--ink); font: 14px/1.45 var(--font); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 20px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.top { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; justify-content: space-between; }
+.top h1 { font-size: 20px; font-weight: 600; margin: 0; text-wrap: balance; }
+.top p { margin: 0; color: var(--ink-2); font-size: 13px; }
+.tabs { display: flex; gap: 4px; margin-block: 16px 14px; border-bottom: 1px solid var(--grid); overflow-x: auto; }
+.tabs button { font: inherit; font-size: 13px; background: none; border: 0; border-bottom: 2px solid transparent;
+  padding: 8px 12px; color: var(--ink-2); cursor: pointer; white-space: nowrap; }
+.tabs button[aria-selected="true"] { color: var(--tab-on); border-bottom-color: var(--tab-on); font-weight: 600; }
+.tabs button:focus-visible, select:focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; }
+.page-head { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: flex-end; justify-content: space-between; margin-bottom: 12px; }
+.page-head h2 { margin: 0; font-size: 18px; font-weight: 600; }
+.page-head p { margin: 2px 0 0; color: var(--ink-2); font-size: 13px; max-width: 70ch; }
+.slicers { display: flex; flex-wrap: wrap; gap: 8px; }
+.slicer { display: grid; gap: 2px; font-size: 11px; color: var(--ink-2); }
+.slicer select, .slicer .fake { font: inherit; font-size: 13px; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--axis); border-radius: 4px; padding: 5px 8px; min-width: 130px; }
+.slicer .fake { color: var(--muted); }
+.grid { display: grid; gap: 10px; grid-template-columns: repeat(12, minmax(0, 1fr)); }
+.v { background: var(--surface); border: 1px solid var(--ring); border-radius: 6px; padding: 12px 14px; min-width: 0; }
+.v h3 { margin: 0; font-size: 13px; font-weight: 600; }
+.v .sub { margin: 2px 0 8px; font-size: 12px; color: var(--muted); }
+.c3 { grid-column: span 3; } .c4 { grid-column: span 4; } .c5 { grid-column: span 5; } .c6 { grid-column: span 6; }
+.c7 { grid-column: span 7; } .c8 { grid-column: span 8; } .c12 { grid-column: span 12; }
+@media (max-width: 900px) { .c3 { grid-column: span 6; } .c4, .c5, .c6, .c7, .c8 { grid-column: span 12; } }
+@media (max-width: 480px) { .c3 { grid-column: span 12; } }
+.kpi .label { font-size: 12px; color: var(--ink-2); }
+.kpi .val { font-size: 30px; font-weight: 600; line-height: 1.15; margin-top: 4px; }
+.kpi .note { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.delta.up { color: var(--good); } .delta.down { color: var(--bad); }
+.hero { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; align-items: end; }
+.hero .big { font-size: 44px; font-weight: 600; line-height: 1; }
+.hero .cap { font-size: 12px; color: var(--ink-2); margin-top: 4px; }
+.hero .mult { grid-column: 1 / -1; font-size: 13px; color: var(--ink-2); border-top: 1px solid var(--grid); padding-top: 8px; }
+.hero .mult b { color: var(--ink); font-size: 16px; }
+.chart { width: 100%; position: relative; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart text { fill: var(--muted); font: 11px var(--font); }
+.chart text.lab { fill: var(--ink-2); }
+.chart text.val { fill: var(--ink); font-weight: 600; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
+.legend i { display: inline-block; width: 12px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+.legend i.sq { height: 10px; width: 10px; }
+.tbl { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+th, td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { font-weight: 600; color: var(--ink-2); font-size: 11.5px; }
+.note-pbi { font-size: 11px; color: var(--muted); margin-top: 6px; }
+.tip { position: fixed; z-index: 20; pointer-events: none; background: var(--surface); color: var(--ink);
+  border: 1px solid var(--ring); border-radius: 6px; padding: 6px 9px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.12);
+  max-width: 240px; }
+.tip b { display: block; margin-bottom: 2px; }
+.tip .r { display: flex; justify-content: space-between; gap: 12px; color: var(--ink-2); }
+.tip .r span:last-child { color: var(--ink); font-variant-numeric: tabular-nums; }
+.notes { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.notes .v p, .notes .v li { font-size: 13px; color: var(--ink-2); max-width: 65ch; }
+.notes .v ul { padding-left: 18px; margin: 6px 0 0; display: grid; gap: 4px; }
+.notes .v p { margin: 6px 0 0; }
+.foot { margin-top: 16px; font-size: 12px; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) { .tabs button { transition: color .15s, border-color .15s; } }
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <h1>Dashboard RRHH y Agro</h1>
+    <p>Vista previa con los datos reales del modelo. Así tiene que quedar el .pbix.</p>
+  </div>
+
+  <div class="tabs" role="tablist" aria-label="Páginas del informe">
+    <button role="tab" id="tab-rrhh" aria-selected="true" aria-controls="pg-rrhh">RRHH · Rotación</button>
+    <button role="tab" id="tab-agro" aria-selected="false" aria-controls="pg-agro">Agro · Producción</button>
+    <button role="tab" id="tab-notas" aria-selected="false" aria-controls="pg-notas">Notas y supuestos</button>
+  </div>
+
+  <!-- ============================ RRHH ============================ -->
+  <section id="pg-rrhh" role="tabpanel" aria-labelledby="tab-rrhh">
+    <div class="page-head">
+      <div><h2>Rotación de personal</h2>
+        <p>Foto de 1.470 empleados (dataset IBM HR). No hay fechas: muestra un estado, no una evolución.</p></div>
+      <div class="slicers" aria-label="Segmentadores (en Power BI)">
+        <div class="slicer">Área<span class="fake">Todas</span></div>
+        <div class="slicer">Género<span class="fake">Todos</span></div>
+        <div class="slicer">Tramo de edad<span class="fake">Todos</span></div>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="v kpi c3"><div class="label">Empleados</div><div class="val" id="k-emp"></div><div class="note" id="k-emp-n"></div></div>
+      <div class="v kpi c3"><div class="label">Rotación</div><div class="val" id="k-rot"></div><div class="note">Se fueron sobre el total</div></div>
+      <div class="v kpi c3"><div class="label">Sueldo promedio</div><div class="val" id="k-sue"></div><div class="note">Mensual, moneda no informada</div></div>
+      <div class="v kpi c3"><div class="label">Con horas extra</div><div class="val" id="k-he"></div><div class="note">De la dotación</div></div>
+
+      <div class="v c7"><h3>Rotación por puesto</h3><p class="sub">Naranja: por encima del promedio de la empresa</p><div class="chart" id="ch-puesto"></div></div>
+      <div class="v c5"><h3>Horas extra</h3><p class="sub">Rotación según si hace horas extra</p>
+        <div class="hero">
+          <div><div class="big" id="h-con"></div><div class="cap">con horas extra</div></div>
+          <div><div class="big" id="h-sin"></div><div class="cap">sin horas extra</div></div>
+          <div class="mult"><b id="h-mult"></b> veces más rotación con horas extra. Es el hallazgo más fuerte del dataset.</div>
+        </div>
+        <div class="grid" style="margin-top:12px">
+          <div class="c6" style="min-width:0"><h3>Por años en la empresa</h3><div class="chart" id="ch-antig"></div></div>
+          <div class="c6" style="min-width:0"><h3>Por tramo de edad</h3><div class="chart" id="ch-edad"></div></div>
+        </div>
+      </div>
+
+      <div class="v c5"><h3>Área × satisfacción laboral</h3><p class="sub">Rotación en cada cruce. Más oscuro = más rotación</p><div class="chart" id="ch-heat"></div></div>
+      <div class="v c7"><h3>Detalle por puesto</h3><p class="sub">Ordenado por rotación</p><div class="tbl" id="tb-puesto"></div></div>
+    </div>
+  </section>
+
+  <!-- ============================ AGRO ============================ -->
+  <section id="pg-agro" role="tabpanel" aria-labelledby="tab-agro" hidden>
+    <div class="page-head">
+      <div><h2>Producción agrícola argentina</h2>
+        <p>Estimaciones por departamento, campañas 1969/70 a 2024/25. Fuente: Secretaría de Agricultura.</p></div>
+      <div class="slicers">
+        <label class="slicer" for="campania">Campaña<select id="campania"></select></label>
+        <div class="slicer">Región<span class="fake">Todas</span></div>
+        <div class="slicer">Categoría<span class="fake">Todas</span></div>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="v kpi c3"><div class="label">Superficie sembrada</div><div class="val" id="k-sem"></div><div class="note" id="k-sem-n"></div></div>
+      <div class="v kpi c3"><div class="label">Producción</div><div class="val" id="k-prod"></div><div class="note" id="k-prod-n"></div></div>
+      <div class="v kpi c3"><div class="label">Rendimiento</div><div class="val" id="k-rin"></div><div class="note" id="k-rin-n"></div></div>
+      <div class="v kpi c3"><div class="label">Variación interanual</div><div class="val delta" id="k-var"></div><div class="note" id="k-var-n"></div></div>
+
+      <div class="v c12"><h3>Producción total por campaña</h3><p class="sub">Millones de toneladas. No responde al segmentador de campaña (Editar interacciones → Ninguno)</p><div class="chart" id="ch-prod"></div></div>
+
+      <div class="v c6"><h3>Superficie sembrada por provincia</h3><p class="sub" id="sub-prov"></p><div class="chart" id="ch-prov"></div>
+        <p class="note-pbi">En Power BI: mapa coroplético por provincia. Acá, las 10 primeras en barras.</p></div>
+      <div class="v c6"><h3>Superficie por grupo de cultivo</h3><p class="sub" id="sub-grupo"></p><div class="chart" id="ch-grupo"></div></div>
+
+      <div class="v c6"><h3>Rendimiento de los cuatro grandes</h3><p class="sub">kg/ha ponderado. No responde al segmentador de campaña</p><div id="lg-rinde" class="legend"></div><div class="chart" id="ch-rinde"></div></div>
+      <div class="v c3"><h3>% cosechado más bajo</h3><p class="sub">Todas las campañas. Avena, centeno y cebada forrajera se siembran para pastoreo: no es pérdida</p><div class="chart" id="ch-pct"></div></div>
+      <div class="v c3"><h3>Soja de primera y de segunda</h3><p class="sub" id="sub-soja"></p><div class="chart" id="ch-soja"></div></div>
+    </div>
+  </section>
+
+  <!-- ============================ NOTAS ============================ -->
+  <section id="pg-notas" role="tabpanel" aria-labelledby="tab-notas" hidden>
+    <div class="page-head"><div><h2>Notas y supuestos</h2><p>Qué hay detrás de cada número. Esta página va dentro del .pbix.</p></div></div>
+    <div class="notes">
+      <div class="v"><h3>Fuentes</h3>
+        <ul><li><b>RRHH:</b> IBM HR Employee Attrition (Kaggle). Dataset ficticio de una empresa de EE.UU., 1.470 empleados, sin fechas.</li>
+        <li><b>Agro:</b> Estimaciones Agrícolas, Secretaría de Agricultura, Ganadería y Pesca. 160.499 filas, cultivo × campaña × departamento.</li></ul></div>
+      <div class="v"><h3>Por qué son dos páginas separadas</h3>
+        <p>Las dos fuentes no comparten ninguna clave: ni lugar, ni fecha, ni empresa. Cruzarlas exigiría inventar un vínculo. Si el proyecto final lo necesita, ese vínculo tiene que ser una tabla nueva con un supuesto escrito y visible.</p></div>
+      <div class="v"><h3>Decisiones de preparación (agro)</h3>
+        <ul><li>Soja 1ra y 2da, poroto por tipo y trigo candeal ya están dentro de su "total": van a una tabla aparte para no contarlos dos veces.</li>
+        <li>El eje de tiempo es la campaña, no el año: en té y yerba mate la columna "anio" es el segundo año de la campaña.</li>
+        <li>El rendimiento se calcula ponderado (toneladas / hectáreas cosechadas). Promediar el rinde de cada fila da 2.840 kg/ha en vez de 3.674.</li>
+        <li>8 filas de 1979-80 sin provincia quedan como "Sin dato".</li></ul></div>
+      <div class="v"><h3>Decisiones de preparación (RRHH)</h3>
+        <ul><li>Se quitaron columnas constantes (EmployeeCount, Over18, StandardHours) y las tres "rates" que no se sabe qué miden.</li>
+        <li>Valores traducidos al español; escalas 1 a 4 con etiqueta y orden.</li>
+        <li>Tramos de edad y antigüedad con los mismos cortes de la clase de limpieza.</li></ul></div>
+      <div class="v"><h3>Limitaciones</h3>
+        <ul><li>RRHH es una foto: no se puede ver si la rotación sube o baja.</li>
+        <li>La moneda del sueldo no está informada.</li>
+        <li>La serie de cebada cambia de definición en 2016 (cervecera + forrajera → total).</li>
+        <li>Las 11 filas con cosechado mayor que sembrado (todas de soja 1ra/2da) se dejaron como vienen, marcadas con una alerta.</li></ul></div>
+    </div>
+  </section>
+
+  <p class="foot">Valores calculados con generar_modelo.py y verificados con SQL. Si una medida del .pbix da distinto, revisar dax/valores_esperados.md.</p>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script type="application/json" id="data">{"camp":[{"campania":"1969/1970","anio_inicio":1969,"sem":22328972,"cos":16136803,"prod":39023146,"pcs":37376743},{"campania":"1970/1971","anio_inicio":1970,"sem":20832805,"cos":14756373,"prod":37848428,"pcs":36028001},{"campania":"1971/1972","anio_inicio":1971,"sem":20407880,"cos":13482389,"prod":33719119,"pcs":32106549},{"campania":"1972/1973","anio_inicio":1972,"sem":22156174,"cos":16107373,"prod":48422530,"pcs":46629625},{"campania":"1973/1974","anio_inicio":1973,"sem":20497718,"cos":15115262,"prod":47853150,"pcs":45907790},{"campania":"1974/1975","anio_inicio":1974,"sem":20436009,"cos":14013979,"prod":42335051,"pcs":40478285},{"campania":"1975/1976","anio_inicio":1975,"sem":20941426,"cos":14953138,"prod":42706407,"pcs":41029978},{"campania":"1976/1977","anio_inicio":1976,"sem":23034789,"cos":17314676,"prod":52597284,"pcs":52597284},{"campania":"1977/1978","anio_inicio":1977,"sem":21818692,"cos":16203460,"prod":47413244,"pcs":47413244},{"campania":"1978/1979","anio_inicio":1978,"sem":22119406,"cos":17059518,"prod":50137611,"pcs":50137611},{"campania":"1979/1980","anio_inicio":1979,"sem":21539245,"cos":16454002,"prod":46905302,"pcs":46905302},{"campania":"1980/1981","anio_inicio":1980,"sem":22545467,"cos":16886615,"prod":55705594,"pcs":55705594},{"campania":"1981/1982","anio_inicio":1981,"sem":23014705,"cos":18478595,"prod":53825001,"pcs":53825001},{"campania":"1982/1983","anio_inicio":1982,"sem":24368661,"cos":20262761,"prod":60828883,"pcs":60828883},{"campania":"1983/1984","anio_inicio":1983,"sem":24517097,"cos":20699822,"prod":61697519,"pcs":61697519},{"campania":"1984/1985","anio_inicio":1984,"sem":23152008,"cos":19936946,"prod":63621337,"pcs":63621337},{"campania":"1985/1986","anio_inicio":1985,"sem":22895979,"cos":19146857,"prod":57478690,"pcs":57478690},{"campania":"1986/1987","anio_inicio":1986,"sem":20548608,"cos":16833811,"prod":51704299,"pcs":51704299},{"campania":"1987/1988","anio_inicio":1987,"sem":20704647,"cos":17719215,"prod":57192813,"pcs":57192813},{"campania":"1988/1989","anio_inicio":1988,"sem":20325571,"cos":15814183,"prod":42768328,"pcs":42768328},{"campania":"1989/1990","anio_inicio":1989,"sem":21895804,"cos":18264912,"prod":51953540,"pcs":51953540},{"campania":"1990/1991","anio_inicio":1990,"sem":20909617,"cos":18259091,"prod":58134703,"pcs":58134703},{"campania":"1991/1992","anio_inicio":1991,"sem":20623194,"cos":17849261,"prod":59206481,"pcs":59206481},{"campania":"1992/1993","anio_inicio":1992,"sem":20574560,"cos":17010172,"prod":56049850,"pcs":56049850},{"campania":"1993/1994","anio_inicio":1993,"sem":21161816,"cos":18143057,"prod":57364017,"pcs":57364017},{"campania":"1994/1995","anio_inicio":1994,"sem":23034437,"cos":19785618,"prod":64408104,"pcs":64408104},{"campania":"1995/1996","anio_inicio":1995,"sem":23999981,"cos":20334742,"prod":61139334,"pcs":61139334},{"campania":"1996/1997","anio_inicio":1996,"sem":27639546,"cos":23768054,"prod":78287000,"pcs":78287000},{"campania":"1997/1998","anio_inicio":1997,"sem":26915111,"cos":23271225,"prod":89717876,"pcs":89717876},{"campania":"1998/1999","anio_inicio":1998,"sem":26969895,"cos":23393971,"prod":61412118,"pcs":61412118},{"campania":"1999/2000","anio_inicio":1999,"sem":26972085,"cos":24086467,"prod":65907684,"pcs":65907684},{"campania":"2000/2001","anio_inicio":2000,"sem":27436284,"cos":24422920,"prod":69344660,"pcs":69344660},{"campania":"2001/2002","anio_inicio":2001,"sem":27724710,"cos":24932471,"prod":70534135,"pcs":70534135},{"campania":"2002/2003","anio_inicio":2002,"sem":27905842,"cos":25093053,"prod":72101673,"pcs":72101673},{"campania":"2003/2004","anio_inicio":2003,"sem":29366937,"cos":26521949,"prod":88452840,"pcs":88452840},{"campania":"2004/2005","anio_inicio":2004,"sem":30109434,"cos":27491678,"prod":104826969,"pcs":104826969},{"campania":"2005/2006","anio_inicio":2005,"sem":29361008,"cos":26819233,"prod":78171914,"pcs":78171914},{"campania":"2006/2007","anio_inicio":2006,"sem":31535262,"cos":29129130,"prod":95458855,"pcs":95458855},{"campania":"2007/2008","anio_inicio":2007,"sem":33329520,"cos":30679612,"prod":98034392,"pcs":98034392},{"campania":"2008/2009","anio_inicio":2008,"sem":32210998,"cos":27765537,"prod":62348820,"pcs":62348820},{"campania":"2009/2010","anio_inicio":2009,"sem":31458942,"cos":28806443,"prod":96677177,"pcs":96677177},{"campania":"2010/2011","anio_inicio":2010,"sem":34957125,"cos":32600668,"prod":105492391,"pcs":105492391},{"campania":"2011/2012","anio_inicio":2011,"sem":35869471,"cos":31673493,"prod":92595312,"pcs":92595312},{"campania":"2012/2013","anio_inicio":2012,"sem":37126541,"cos":33230611,"prod":106164561,"pcs":106164561},{"campania":"2013/2014","anio_inicio":2013,"sem":36805328,"cos":32922177,"prod":112045261,"pcs":112045261},{"campania":"2014/2015","anio_inicio":2014,"sem":38126151,"cos":34106406,"prod":124285422,"pcs":124285422},{"campania":"2015/2016","anio_inicio":2015,"sem":39040329,"cos":34151603,"prod":126610837,"pcs":126610837},{"campania":"2016/2017","anio_inicio":2016,"sem":39697973,"cos":34534182,"prod":137732903,"pcs":137732903},{"campania":"2017/2018","anio_inicio":2017,"sem":38861550,"cos":34263852,"prod":114042844,"pcs":114042844},{"campania":"2018/2019","anio_inicio":2018,"sem":39750815,"cos":35226820,"prod":147675928,"pcs":147675928},{"campania":"2019/2020","anio_inicio":2019,"sem":40791056,"cos":36418062,"prod":141909717,"pcs":141909717},{"campania":"2020/2021","anio_inicio":2020,"sem":40916369,"cos":36546511,"prod":140878887,"pcs":140878887},{"campania":"2021/2022","anio_inicio":2021,"sem":42491075,"cos":37598009,"prod":143514398,"pcs":143514398},{"campania":"2022/2023","anio_inicio":2022,"sem":42030232,"cos":34933890,"prod":96134972,"pcs":96134972},{"campania":"2023/2024","anio_inicio":2023,"sem":42676997,"cos":37221977,"prod":140160203,"pcs":140160203},{"campania":"2024/2025","anio_inicio":2024,"sem":43806874,"cos":38464199,"prod":141311687,"pcs":141311687}],"grupo":{"1969/1970":{"Trigo":6238470,"Maíz":4663760,"Sorgo":2567500,"Centeno":2488900,"Girasol":1472300,"Avena":1128280,"Lino":952000,"Cebada":944735},"1970/1971":{"Maíz":4990990,"Trigo":4467955,"Sorgo":3121600,"Centeno":1976900,"Girasol":1614200,"Avena":1025190,"Lino":973300,"Cebada":812540},"1971/1972":{"Trigo":4985687,"Maíz":4437630,"Sorgo":2759000,"Centeno":2202200,"Girasol":1532700,"Avena":1097440,"Cebada":933215,"Lino":538800},"1972/1973":{"Trigo":5625107,"Maíz":4249455,"Sorgo":2974400,"Centeno":2533990,"Girasol":1652400,"Avena":1221770,"Cebada":1125730,"Algodón":535500},"1973/1974":{"Trigo":4251550,"Maíz":4132500,"Sorgo":3114000,"Centeno":2515180,"Girasol":1341900,"Avena":1153950,"Cebada":1036390,"Algodón":557500},"1974/1975":{"Trigo":5182780,"Maíz":3869850,"Sorgo":2601800,"Centeno":2369780,"Avena":1200150,"Girasol":1196000,"Cebada":949300,"Lino":520000},"1975/1976":{"Trigo":5752800,"Maíz":3694900,"Centeno":2407576,"Sorgo":2357800,"Girasol":1411100,"Avena":1341100,"Cebada":976280,"Lino":471400},"1976/1977":{"Trigo":7191820,"Maíz":2978900,"Sorgo":2779950,"Centeno":2299985,"Avena":1470850,"Girasol":1460000,"Cebada":966985,"Lino":722000},"1977/1978":{"Trigo":4599850,"Maíz":3099200,"Sorgo":2649920,"Girasol":2200000,"Centeno":2139950,"Avena":1479870,"Soja":1200000,"Lino":950000},"1978/1979":{"Trigo":5229860,"Maíz":3299350,"Sorgo":2539970,"Girasol":1766000,"Centeno":1721940,"Soja":1640000,"Avena":1544660,"Lino":893000},"1979/1980":{"Trigo":4999850,"Maíz":3309450,"Soja":2100000,"Girasol":2000000,"Sorgo":1883970,"Avena":1679700,"Centeno":1493980,"Lino":1070000},"1980/1981":{"Trigo":6195870,"Maíz":3999550,"Sorgo":2399970,"Soja":1925000,"Avena":1717670,"Centeno":1489185,"Girasol":1390000,"Lino":780000},"1981/1982":{"Trigo":6565810,"Maíz":3694650,"Sorgo":2711970,"Soja":2040000,"Girasol":1733000,"Avena":1614670,"Centeno":1338385,"Lino":851000},"1982/1983":{"Trigo":7409800,"Maíz":3439500,"Sorgo":2656950,"Soja":2362000,"Girasol":1930000,"Avena":1855670,"Centeno":1482985,"Lino":910000},"1983/1984":{"Trigo":7199860,"Maíz":3483100,"Soja":2920000,"Sorgo":2549950,"Girasol":2131000,"Avena":1799670,"Centeno":1222485,"Lino":810000},"1984/1985":{"Trigo":6000000,"Maíz":3619900,"Soja":3300000,"Girasol":2380000,"Sorgo":2039900,"Avena":1773700,"Centeno":1070285,"Lino":620000},"1985/1986":{"Trigo":5700000,"Maíz":3819800,"Soja":3340000,"Girasol":3140000,"Avena":1738650,"Sorgo":1399950,"Centeno":829985,"Lino":750000},"1986/1987":{"Trigo":5000000,"Soja":3684000,"Maíz":3649880,"Girasol":1890500,"Avena":1529700,"Sorgo":1126950,"Centeno":775500,"Lino":758000},"1987/1988":{"Trigo":4850000,"Soja":4413000,"Maíz":2824894,"Girasol":2117000,"Avena":1959720,"Sorgo":1075000,"Lino":670700,"Centeno":581200},"1988/1989":{"Trigo":4750000,"Soja":4670000,"Maíz":2684800,"Girasol":2313000,"Avena":1830000,"Sorgo":830000,"Lino":574000,"Algodón":524000},"1989/1990":{"Trigo":5500000,"Soja":5100000,"Girasol":2800000,"Avena":2098450,"Maíz":2069820,"Sorgo":800000,"Lino":595700,"Centeno":595000},"1990/1991":{"Trigo":6178400,"Soja":4966200,"Girasol":2372350,"Maíz":2159700,"Avena":1015000,"Sorgo":751900,"Algodón":638800,"Lino":589500},"1991/1992":{"Soja":5003000,"Trigo":4750850,"Girasol":2724375,"Maíz":2684000,"Avena":1330000,"Sorgo":823200,"Algodón":614900,"Centeno":451800},"1992/1993":{"Soja":5318410,"Trigo":4547700,"Maíz":2960820,"Girasol":2187100,"Avena":2006100,"Sorgo":809900,"Centeno":462900,"Algodón":377747},"1993/1994":{"Soja":5817490,"Trigo":4909900,"Maíz":2780580,"Girasol":2205800,"Avena":1971080,"Sorgo":670380,"Algodón":503610,"Centeno":460400},"1994/1995":{"Soja":6011240,"Trigo":5307850,"Girasol":3010440,"Maíz":2957200,"Avena":1971695,"Algodón":761500,"Sorgo":621860,"Centeno":473000},"1995/1996":{"Soja":6002155,"Trigo":5087800,"Maíz":3414350,"Girasol":3410600,"Avena":1847775,"Algodón":1009800,"Sorgo":670680,"Centeno":390305},"1996/1997":{"Trigo":7366850,"Soja":6669500,"Maíz":4153200,"Girasol":3119750,"Avena":1870180,"Algodón":955560,"Sorgo":804450,"Centeno":380200},"1997/1998":{"Soja":7176250,"Trigo":5918665,"Maíz":3751630,"Girasol":3511400,"Avena":1789200,"Algodón":1133150,"Sorgo":920060,"Maní":406560},"1998/1999":{"Soja":8400000,"Trigo":5453250,"Girasol":4243800,"Maíz":3270050,"Avena":1822240,"Sorgo":879800,"Algodón":750930,"Poroto":428450},"1999/2000":{"Soja":8788181,"Trigo":6300000,"Maíz":3651900,"Girasol":3587000,"Avena":1711460,"Sorgo":819005,"Centeno":386750,"Algodón":345950},"2000/2001":{"Soja":10927330,"Trigo":6496600,"Maíz":3494523,"Girasol":1976120,"Avena":1663685,"Sorgo":698170,"Algodón":410905,"Centeno":394950},"2001/2002":{"Soja":11627961,"Trigo":7108900,"Maíz":3061661,"Girasol":2050365,"Avena":1516115,"Sorgo":574982,"Centeno":359650,"Cebada":280118},"2002/2003":{"Soja":12590244,"Trigo":6300210,"Maíz":3060374,"Girasol":2378000,"Avena":1368400,"Sorgo":579740,"Centeno":338040,"Cebada":288103},"2003/2004":{"Soja":14513106,"Trigo":6039857,"Maíz":2962400,"Girasol":1847963,"Avena":1344030,"Sorgo":531125,"Cebada":368189,"Centeno":340490},"2004/2005":{"Soja":14390630,"Trigo":6255365,"Maíz":3403837,"Girasol":1966599,"Avena":1275253,"Sorgo":617452,"Algodón":406421,"Cebada":299710},"2005/2006":{"Soja":15368083,"Trigo":5222485,"Maíz":3190440,"Girasol":2231714,"Avena":1022680,"Sorgo":577010,"Algodón":309194,"Cebada":295350},"2006/2007":{"Soja":16110038,"Trigo":5675975,"Maíz":3578235,"Girasol":2381388,"Avena":1067180,"Sorgo":700010,"Algodón":403638,"Cebada":366390},"2007/2008":{"Soja":16571885,"Trigo":5951577,"Maíz":4238329,"Girasol":2612646,"Avena":1112910,"Sorgo":808340,"Cebada":471685,"Algodón":307259},"2008/2009":{"Soja":17980895,"Trigo":4733735,"Maíz":3501328,"Girasol":1967420,"Avena":1055230,"Sorgo":662350,"Cebada":627130,"Algodón":297292},"2009/2010":{"Soja":18392752,"Maíz":3671260,"Trigo":3556705,"Girasol":1545295,"Sorgo":1033150,"Avena":916763,"Cebada":587795,"Algodón":489410},"2010/2011":{"Soja":18870651,"Trigo":4582250,"Maíz":4561101,"Girasol":1758545,"Sorgo":1233452,"Avena":1133300,"Cebada":804450,"Algodón":640765},"2011/2012":{"Soja":18664148,"Maíz":5000330,"Trigo":4630600,"Girasol":1851220,"Sorgo":1266304,"Cebada":1229607,"Avena":1056680,"Algodón":622146},"2012/2013":{"Soja":19902072,"Maíz":6133378,"Trigo":3162138,"Cebada":1877235,"Girasol":1657071,"Avena":1223770,"Sorgo":1157963,"Maní":418063},"2013/2014":{"Soja":19705342,"Maíz":6098885,"Trigo":3648070,"Avena":1464335,"Cebada":1342126,"Girasol":1313195,"Sorgo":997425,"Algodón":552246},"2014/2015":{"Soja":19792100,"Maíz":6034480,"Trigo":5261085,"Girasol":1464855,"Avena":1344380,"Cebada":1082058,"Sorgo":844086,"Algodón":523680},"2015/2016":{"Soja":20562233,"Maíz":6904538,"Trigo":4381128,"Cebada":1514261,"Girasol":1435148,"Avena":1329030,"Sorgo":842571,"Algodón":406130},"2016/2017":{"Soja":18057162,"Maíz":8486694,"Trigo":6364015,"Girasol":1861595,"Avena":1353074,"Cebada":980043,"Sorgo":728280,"Poroto":423833},"2017/2018":{"Soja":17259260,"Maíz":9139766,"Trigo":5927610,"Girasol":1704296,"Avena":1150896,"Cebada":1019710,"Sorgo":640620,"Maní":452118},"2018/2019":{"Soja":17010277,"Maíz":9039594,"Trigo":6287149,"Girasol":1826065,"Avena":1364520,"Cebada":1353128,"Sorgo":522221,"Algodón":441103},"2019/2020":{"Soja":16918869,"Maíz":9504473,"Trigo":6951171,"Avena":1484966,"Girasol":1404768,"Cebada":1277045,"Centeno":726379,"Sorgo":520128},"2020/2021":{"Soja":16650093,"Maíz":9742230,"Trigo":6729898,"Girasol":1636885,"Avena":1405535,"Cebada":1237023,"Sorgo":984083,"Centeno":667809},"2021/2022":{"Soja":16094383,"Maíz":10670126,"Trigo":6751729,"Girasol":1968907,"Cebada":1635623,"Avena":1482894,"Sorgo":943151,"Centeno":919737},"2022/2023":{"Soja":15978775,"Maíz":10533195,"Trigo":5907287,"Girasol":2465201,"Cebada":1801943,"Avena":1475445,"Centeno":886967,"Sorgo":749655},"2023/2024":{"Soja":16564537,"Maíz":11103250,"Trigo":5916678,"Girasol":1857963,"Cebada":1484473,"Avena":1481985,"Centeno":970260,"Sorgo":827086},"2024/2025":{"Soja":17994965,"Maíz":9234043,"Trigo":6550169,"Girasol":2413081,"Cebada":1690458,"Avena":1432632,"Sorgo":1005799,"Centeno":957215}},"prov":{"1969/1970":{"Buenos Aires":8823985,"Córdoba":4280260,"Santa Fe":3194770,"La Pampa":2160200,"Entre Ríos":1601320,"Chaco":652120,"San Luis":373165,"Misiones":264350,"Tucumán":256750,"Santiago del Estero":226650},"1970/1971":{"Buenos Aires":8428836,"Córdoba":3635820,"Santa Fe":3424165,"Entre Ríos":1528852,"La Pampa":1448000,"Chaco":641751,"San Luis":395478,"Misiones":269515,"Tucumán":265100,"Santiago del Estero":237370},"1971/1972":{"Buenos Aires":7953720,"Santa Fe":3733070,"Córdoba":3469480,"La Pampa":1564000,"Entre Ríos":1317105,"Chaco":665582,"San Luis":353148,"Misiones":272976,"Santiago del Estero":264032,"Tucumán":263700},"1972/1973":{"Buenos Aires":8418709,"Córdoba":4126688,"Santa Fe":3833630,"La Pampa":2130530,"Entre Ríos":1090570,"Chaco":701710,"San Luis":414521,"Tucumán":311485,"Misiones":281678,"Santiago del Estero":248060},"1973/1974":{"Buenos Aires":7688388,"Córdoba":4002200,"Santa Fe":3292172,"La Pampa":2032420,"Entre Ríos":913214,"Chaco":650539,"San Luis":429666,"Tucumán":318434,"Misiones":287641,"Santiago del Estero":242840},"1974/1975":{"Buenos Aires":7864730,"Córdoba":3862835,"Santa Fe":3112490,"La Pampa":2227380,"Entre Ríos":813642,"Chaco":628401,"San Luis":436090,"Tucumán":328958,"Misiones":265332,"Santiago del Estero":220240},"1975/1976":{"Buenos Aires":8279270,"Córdoba":3778241,"Santa Fe":3283603,"La Pampa":2108050,"Entre Ríos":859747,"Chaco":727452,"San Luis":428068,"Tucumán":334735,"Misiones":267550,"Santiago del Estero":237360},"1976/1977":{"Buenos Aires":9086659,"Córdoba":4440500,"Santa Fe":3472330,"La Pampa":2189860,"Entre Ríos":1077324,"Chaco":640153,"San Luis":408826,"Tucumán":367148,"Misiones":275564,"Santiago del Estero":267720},"1977/1978":{"Buenos Aires":8338610,"Córdoba":4199830,"Santa Fe":3589045,"La Pampa":1878530,"Entre Ríos":991035,"Chaco":802800,"Tucumán":394220,"Misiones":275293,"San Luis":273505,"Santiago del Estero":264740},"1978/1979":{"Buenos Aires":8466299,"Córdoba":4254460,"Santa Fe":3649110,"La Pampa":1771605,"Entre Ríos":917308,"Chaco":843285,"Tucumán":421430,"Santiago del Estero":303740,"San Luis":299710,"Misiones":275952},"1979/1980":{"Buenos Aires":8266330,"Córdoba":3891378,"Santa Fe":3679512,"La Pampa":1668730,"Entre Ríos":908685,"Chaco":859707,"Tucumán":419768,"San Luis":390350,"Santiago del Estero":311531,"Misiones":275231},"1980/1981":{"Buenos Aires":8442045,"Córdoba":4672417,"Santa Fe":3788966,"La Pampa":1885028,"Entre Ríos":948506,"Chaco":622996,"Tucumán":453968,"San Luis":397056,"Misiones":283210,"Santiago del Estero":276986},"1981/1982":{"Buenos Aires":9138760,"Córdoba":4411515,"Santa Fe":3656053,"La Pampa":1756675,"Entre Ríos":1033710,"Chaco":761902,"Tucumán":458807,"San Luis":413473,"Salta":311733,"Santiago del Estero":291477},"1982/1983":{"Buenos Aires":9612735,"Córdoba":4590013,"Santa Fe":3855645,"La Pampa":2188063,"Entre Ríos":1109234,"Chaco":693634,"Tucumán":462651,"San Luis":435595,"Santiago del Estero":342552,"Salta":323803},"1983/1984":{"Buenos Aires":10054090,"Córdoba":4504855,"Santa Fe":3847780,"La Pampa":1922110,"Entre Ríos":989922,"Chaco":699838,"San Luis":514125,"Tucumán":475244,"Santiago del Estero":360491,"Salta":342575},"1984/1985":{"Buenos Aires":9450330,"Córdoba":4177649,"Santa Fe":3736417,"La Pampa":1907408,"Entre Ríos":926521,"Chaco":685415,"Tucumán":472578,"San Luis":388240,"Salta":334640,"Santiago del Estero":307150},"1985/1986":{"Buenos Aires":9535710,"Córdoba":3910535,"Santa Fe":3726695,"La Pampa":1830012,"Entre Ríos":932253,"Chaco":630983,"Tucumán":513362,"San Luis":419537,"Salta":355390,"Santiago del Estero":312465},"1986/1987":{"Buenos Aires":8473609,"Córdoba":3530965,"Santa Fe":3530248,"La Pampa":1600259,"Entre Ríos":836717,"Tucumán":472640,"Santiago del Estero":398075,"Chaco":375430,"Salta":334645,"San Luis":303562},"1987/1988":{"Buenos Aires":7823164,"Córdoba":3864422,"Santa Fe":3699783,"La Pampa":1825006,"Entre Ríos":799181,"Chaco":591445,"Tucumán":458746,"Salta":339050,"Santiago del Estero":329297,"San Luis":279708},"1988/1989":{"Buenos Aires":8083665,"Santa Fe":3558096,"Córdoba":3522480,"La Pampa":1865058,"Entre Ríos":904494,"Chaco":540246,"Tucumán":378048,"Salta":306860,"Misiones":292749,"Santiago del Estero":236784},"1989/1990":{"Buenos Aires":8438315,"Córdoba":3866030,"Santa Fe":3731230,"La Pampa":2064050,"Entre Ríos":1077220,"Chaco":696604,"Tucumán":458197,"Salta":368713,"Misiones":276108,"Santiago del Estero":266500},"1990/1991":{"Buenos Aires":7567428,"Santa Fe":3840479,"Córdoba":3827940,"La Pampa":2158800,"Entre Ríos":948250,"Chaco":732962,"Tucumán":461872,"Salta":309977,"Santiago del Estero":262614,"Misiones":250965},"1991/1992":{"Buenos Aires":7190553,"Córdoba":4158894,"Santa Fe":3749970,"La Pampa":1996750,"Entre Ríos":924980,"Chaco":714640,"Tucumán":446033,"Salta":375373,"Santiago del Estero":256000,"Misiones":245174},"1992/1993":{"Buenos Aires":7560128,"Córdoba":3946005,"Santa Fe":3573580,"La Pampa":2084700,"Entre Ríos":837118,"Chaco":656141,"Tucumán":440453,"Salta":432225,"Misiones":281670,"Santiago del Estero":272300},"1993/1994":{"Buenos Aires":7207665,"Córdoba":4433012,"Santa Fe":3880735,"La Pampa":2083840,"Entre Ríos":801529,"Chaco":686639,"Salta":485572,"Tucumán":435044,"Santiago del Estero":326400,"Misiones":286494},"1994/1995":{"Buenos Aires":8037839,"Córdoba":4629161,"Santa Fe":4085568,"La Pampa":2212050,"Entre Ríos":938944,"Chaco":877287,"Salta":500169,"Santiago del Estero":437150,"Tucumán":430952,"Misiones":286124},"1995/1996":{"Buenos Aires":8424306,"Córdoba":4761590,"Santa Fe":4188596,"La Pampa":2347610,"Entre Ríos":1082018,"Chaco":913063,"Santiago del Estero":505125,"Salta":487601,"Tucumán":417059,"Misiones":289150},"1996/1997":{"Buenos Aires":10257302,"Córdoba":5422575,"Santa Fe":4764472,"La Pampa":2387050,"Entre Ríos":1286557,"Chaco":1039126,"Santiago del Estero":601850,"Salta":565758,"Tucumán":494036,"Misiones":270269},"1997/1998":{"Buenos Aires":9789162,"Córdoba":5209960,"Santa Fe":4605870,"La Pampa":2465815,"Entre Ríos":1317722,"Chaco":1056490,"Santiago del Estero":634750,"Salta":579989,"Tucumán":470628,"Misiones":273615},"1998/1999":{"Buenos Aires":9480075,"Córdoba":5620700,"Santa Fe":4629920,"La Pampa":2328530,"Entre Ríos":1426050,"Chaco":1008400,"Santiago del Estero":829850,"Salta":638600,"Misiones":264534,"Tucumán":254830},"1999/2000":{"Buenos Aires":9615190,"Córdoba":5871081,"Santa Fe":4836600,"La Pampa":2197850,"Entre Ríos":1299900,"Chaco":952770,"Santiago del Estero":725600,"Salta":541600,"Tucumán":266810,"Misiones":248789},"2000/2001":{"Buenos Aires":9024000,"Córdoba":6151200,"Santa Fe":4934600,"La Pampa":2063085,"Entre Ríos":1486200,"Chaco":1057600,"Santiago del Estero":1038400,"Salta":677800,"Tucumán":310150,"Misiones":245225},"2001/2002":{"Buenos Aires":8569639,"Córdoba":6485776,"Santa Fe":5031450,"La Pampa":1986890,"Entre Ríos":1683830,"Chaco":1113300,"Santiago del Estero":1075729,"Salta":685380,"Tucumán":400239,"Misiones":241215},"2002/2003":{"Buenos Aires":8574691,"Córdoba":6347771,"Santa Fe":4908500,"La Pampa":2010595,"Entre Ríos":1770660,"Chaco":1445400,"Santiago del Estero":1084200,"Salta":653500,"Tucumán":401225,"Misiones":236904},"2003/2004":{"Buenos Aires":9109311,"Córdoba":6596736,"Santa Fe":5012910,"Entre Ríos":1935810,"La Pampa":1872800,"Chaco":1493450,"Santiago del Estero":1139795,"Salta":735180,"Tucumán":626430,"Misiones":245528},"2004/2005":{"Buenos Aires":9548555,"Córdoba":6887006,"Santa Fe":5015494,"Entre Ríos":2084452,"La Pampa":1866824,"Chaco":1258453,"Santiago del Estero":1017465,"Salta":826868,"Tucumán":664580,"San Luis":269546},"2005/2006":{"Buenos Aires":9386265,"Córdoba":6766364,"Santa Fe":4911440,"Entre Ríos":2026930,"La Pampa":1457640,"Chaco":1450648,"Santiago del Estero":1142790,"Salta":826450,"Tucumán":535338,"San Luis":275620},"2006/2007":{"Buenos Aires":10148447,"Córdoba":7192712,"Santa Fe":5028210,"Entre Ríos":2198710,"Chaco":1710220,"La Pampa":1515860,"Santiago del Estero":1341710,"Salta":929200,"Tucumán":551340,"San Luis":326010},"2007/2008":{"Buenos Aires":10793157,"Córdoba":8008881,"Santa Fe":5224562,"Entre Ríos":2272819,"La Pampa":1792900,"Chaco":1459200,"Santiago del Estero":1276040,"Salta":910500,"Tucumán":559200,"San Luis":440645},"2008/2009":{"Buenos Aires":11334221,"Córdoba":7705891,"Santa Fe":4524234,"Entre Ríos":1960245,"La Pampa":1835780,"Chaco":1247057,"Salta":1094950,"Santiago del Estero":988865,"Tucumán":544470,"San Luis":386730},"2009/2010":{"Buenos Aires":10808853,"Córdoba":6859180,"Santa Fe":4847229,"Entre Ríos":2291470,"La Pampa":1595760,"Chaco":1301990,"Santiago del Estero":1237100,"Salta":1108225,"Tucumán":515910,"San Luis":323385},"2010/2011":{"Buenos Aires":12293128,"Córdoba":7307072,"Santa Fe":4695657,"Entre Ríos":2270630,"Santiago del Estero":2234125,"Chaco":1710370,"La Pampa":1709000,"Salta":1212970,"Tucumán":496300,"San Luis":419240},"2011/2012":{"Buenos Aires":12800403,"Córdoba":7480691,"Santa Fe":4849572,"Santiago del Estero":2340700,"Entre Ríos":2233200,"La Pampa":1729155,"Chaco":1692630,"Salta":1258374,"San Luis":451070,"Tucumán":435415},"2012/2013":{"Buenos Aires":12811043,"Córdoba":8591503,"Santa Fe":5061639,"Santiago del Estero":2321360,"Entre Ríos":2256080,"La Pampa":1650570,"Chaco":1467820,"Salta":1189549,"San Luis":878263,"Tucumán":356670},"2013/2014":{"Buenos Aires":12726620,"Córdoba":8784881,"Santa Fe":5114173,"Entre Ríos":2409010,"Santiago del Estero":2019305,"La Pampa":1767400,"Chaco":1479700,"Salta":996160,"San Luis":688105,"Tucumán":303660},"2014/2015":{"Buenos Aires":13127929,"Córdoba":9368996,"Santa Fe":5433250,"Entre Ríos":2425295,"La Pampa":1878550,"Santiago del Estero":1833700,"Chaco":1300875,"Salta":1114583,"San Luis":743855,"Tucumán":334240},"2015/2016":{"Buenos Aires":13173755,"Córdoba":9467440,"Santa Fe":5235357,"Entre Ríos":2265520,"Santiago del Estero":2231442,"La Pampa":2115285,"Chaco":1461867,"Salta":1219057,"San Luis":848386,"Tucumán":427050},"2016/2017":{"Buenos Aires":13452274,"Córdoba":9846466,"Santa Fe":5310646,"Entre Ríos":2394365,"Santiago del Estero":2184206,"La Pampa":1990065,"Chaco":1553388,"Salta":1184044,"San Luis":754240,"Tucumán":437769},"2017/2018":{"Buenos Aires":12560094,"Córdoba":9242980,"Santa Fe":5622398,"Santiago del Estero":2471990,"Entre Ríos":2429610,"La Pampa":1748430,"Chaco":1580011,"Salta":1217504,"San Luis":877840,"Tucumán":439920},"2018/2019":{"Buenos Aires":13346195,"Córdoba":9336487,"Santa Fe":5560138,"Santiago del Estero":2561178,"Entre Ríos":2369000,"La Pampa":1965170,"Chaco":1535967,"Salta":1199144,"San Luis":862260,"Tucumán":401480},"2019/2020":{"Buenos Aires":13102834,"Córdoba":9918341,"Santa Fe":6011029,"Santiago del Estero":2823744,"Entre Ríos":2346635,"La Pampa":1980390,"Chaco":1472741,"Salta":1240472,"San Luis":897080,"Tucumán":397810},"2020/2021":{"Buenos Aires":14003484,"Córdoba":9404706,"Santa Fe":6160968,"Santiago del Estero":2675134,"Entre Ríos":2410739,"La Pampa":2102869,"Chaco":1327495,"Salta":1239747,"San Luis":791775,"Tucumán":375845},"2021/2022":{"Buenos Aires":14358345,"Córdoba":9869396,"Santa Fe":6191220,"Santiago del Estero":2891632,"Entre Ríos":2447555,"La Pampa":2264596,"Chaco":1568427,"Salta":1220260,"San Luis":890935,"Tucumán":359235},"2022/2023":{"Buenos Aires":14780809,"Córdoba":9415537,"Santa Fe":5989701,"Santiago del Estero":2771940,"Entre Ríos":2378090,"La Pampa":2078367,"Chaco":1453964,"Salta":1245470,"San Luis":884900,"Tucumán":370300},"2023/2024":{"Buenos Aires":14379689,"Córdoba":9468576,"Santa Fe":6199998,"Santiago del Estero":2854470,"Entre Ríos":2615039,"La Pampa":2357578,"Chaco":1446160,"Salta":1312445,"San Luis":968900,"Tucumán":393055},"2024/2025":{"Buenos Aires":15290659,"Córdoba":9702364,"Santa Fe":6442754,"Santiago del Estero":3039831,"Entre Ríos":2628240,"La Pampa":2204750,"Chaco":1427686,"Salta":1267026,"San Luis":1011740,"Tucumán":389640}},"rinde":{"Girasol":{"1969":846,"1970":632,"1971":644,"1972":658,"1973":815,"1974":728,"1975":862,"1976":733,"1977":800,"1978":918,"1979":889,"1980":984,"1981":1184,"1982":1262,"1983":1106,"1984":1441,"1985":1346,"1986":1268,"1987":1435,"1988":1444,"1989":1451,"1990":1753,"1991":1413,"1992":1435,"1993":1902,"1994":1963,"1995":1718,"1996":1812,"1997":1681,"1998":1752,"1999":1746,"2000":1670,"2001":1908,"2002":1598,"2003":1731,"2004":1904,"2005":1735,"2006":1488,"2007":1810,"2008":1365,"2009":1491,"2010":2107,"2011":1832,"2012":1916,"2013":1635,"2014":2193,"2015":2122,"2016":1950,"2017":2108,"2018":2005,"2019":2068,"2020":1995,"2021":2068,"2022":2046,"2023":2114,"2024":2333},"Maíz":{"1969":2331,"1970":2443,"1971":1862,"1972":2721,"1973":2840,"1974":2508,"1975":2117,"1976":3279,"1977":3647,"1978":3107,"1979":2570,"1980":3801,"1981":3028,"1982":3030,"1983":3141,"1984":3563,"1985":3745,"1986":3190,"1987":3774,"1988":2910,"1989":3461,"1990":4045,"1991":4525,"1992":4356,"1993":4237,"1994":4523,"1995":4040,"1996":4556,"1997":6078,"1998":5370,"1999":5433,"2000":5455,"2001":6079,"2002":6520,"2003":6422,"2004":7359,"2005":5903,"2006":7666,"2007":6452,"2008":5560,"2009":7804,"2010":6350,"2011":5735,"2012":6589,"2013":6841,"2014":7309,"2015":7443,"2016":7571,"2017":6088,"2018":7862,"2019":7554,"2020":7430,"2021":6733,"2022":5109,"2023":6581,"2024":6964},"Soja":{"1969":1032,"1970":1624,"1971":1147,"1972":1732,"1973":1440,"1974":1363,"1975":1603,"1976":2121,"1977":2174,"1978":2312,"1979":1724,"1980":2005,"1981":2090,"1982":1754,"1983":2405,"1984":1988,"1985":2141,"1986":1896,"1987":2264,"1988":1653,"1989":2157,"1990":2275,"1991":2291,"1992":2159,"1993":2039,"1994":2045,"1995":2105,"1996":1721,"1997":2694,"1998":2445,"1999":2331,"2000":2569,"2001":2630,"2002":2804,"2003":2208,"2004":2729,"2005":2680,"2006":2973,"2007":2822,"2008":1852,"2009":2923,"2010":2607,"2011":2282,"2012":2547,"2013":2774,"2014":3176,"2015":3016,"2016":3171,"2017":2316,"2018":3334,"2019":2919,"2020":2807,"2021":2763,"2022":1744,"2023":2945,"2024":2928},"Trigo":{"1969":1352,"1970":1329,"1971":1267,"1972":1591,"1973":1657,"1974":1410,"1975":1626,"1976":1711,"1977":1355,"1978":1729,"1979":1692,"1980":1549,"1981":1401,"1982":2049,"1983":1838,"1984":2305,"1985":1617,"1986":1778,"1987":1879,"1988":1836,"1989":1892,"1990":1896,"1991":2174,"1992":2321,"1993":2022,"1994":2166,"1995":1936,"1996":2242,"1997":2596,"1998":2305,"1999":2487,"2000":2491,"2001":2235,"2002":2033,"2003":2539,"2004":2627,"2005":2531,"2006":2626,"2007":2831,"2008":1963,"2009":2757,"2010":3503,"2011":3225,"2012":2658,"2013":2662,"2014":2810,"2015":2862,"2016":3305,"2017":3181,"2018":3216,"2019":2939,"2020":2759,"2021":3383,"2022":2288,"2023":2843,"2024":2919}},"pctcos":{"Cebada forrajera":0.1311,"Centeno":0.16,"Avena":0.2055,"Mijo":0.5659,"Mandarina":0.7825,"Jojoba":0.7829,"Yerba mate":0.7886,"Sorgo":0.8011},"soja":{"2000/2001":{"Soja de primera":7847100,"Soja de segunda":3080230},"2001/2002":{"Soja de primera":8340713,"Soja de segunda":3287248},"2002/2003":{"Soja de primera":9735119,"Soja de segunda":2855125},"2003/2004":{"Soja de primera":11434085,"Soja de segunda":3079021},"2004/2005":{"Soja de primera":11098598,"Soja de segunda":3292032},"2005/2006":{"Soja de primera":12292497,"Soja de segunda":3075586},"2006/2007":{"Soja de primera":12662397,"Soja de segunda":3447641},"2007/2008":{"Soja de primera":12788351,"Soja de segunda":3783534},"2008/2009":{"Soja de primera":15069766,"Soja de segunda":2912487},"2009/2010":{"Soja de primera":16245988,"Soja de segunda":2146764},"2010/2011":{"Soja de primera":15953404,"Soja de segunda":2924476},"2011/2012":{"Soja de primera":15347132,"Soja de segunda":3318016},"2012/2013":{"Soja de primera":16456165,"Soja de segunda":3346607},"2013/2014":{"Soja de primera":16564390,"Soja de segunda":3140952},"2014/2015":{"Soja de primera":15719645,"Soja de segunda":4072455},"2015/2016":{"Soja de primera":16782993,"Soja de segunda":3779240},"2016/2017":{"Soja de primera":13687752,"Soja de segunda":4369410},"2017/2018":{"Soja de primera":12748937,"Soja de segunda":4510323},"2018/2019":{"Soja de primera":12254127,"Soja de segunda":4756150},"2019/2020":{"Soja de primera":11484887,"Soja de segunda":5433982},"2020/2021":{"Soja de primera":11299935,"Soja de segunda":5350158},"2021/2022":{"Soja de primera":10496551,"Soja de segunda":5596032},"2022/2023":{"Soja de primera":11401199,"Soja de segunda":4577626},"2023/2024":{"Soja de primera":12019579,"Soja de segunda":4544957},"2024/2025":{"Soja de primera":12483086,"Soja de segunda":5511879}},"rrhh":{"n":1470,"bajas":237,"tasa":0.1612,"sueldo":6503,"he":0.283,"rot_he":0.3053,"rot_nohe":0.1044,"puesto":[{"k":"Analista de RRHH","n":52,"b":12,"t":0.2308,"s":4236,"a":5.3},{"k":"Científico investigador","n":292,"b":47,"t":0.161,"s":3240,"a":5.1},{"k":"Director de investigación","n":80,"b":2,"t":0.025,"s":16034,"a":10.9},{"k":"Director de manufactura","n":145,"b":10,"t":0.069,"s":7295,"a":7.6},{"k":"Ejecutivo de ventas","n":326,"b":57,"t":0.1748,"s":6924,"a":7.5},{"k":"Gerente","n":102,"b":5,"t":0.049,"s":17182,"a":14.4},{"k":"Representante de salud","n":131,"b":9,"t":0.0687,"s":7529,"a":8.4},{"k":"Representante de ventas","n":83,"b":33,"t":0.3976,"s":2626,"a":2.9},{"k":"Técnico de laboratorio","n":259,"b":62,"t":0.2394,"s":3237,"a":5.0}],"antig":[{"k":"<1","n":44,"t":0.3636},{"k":"1-2","n":298,"t":0.2886},{"k":"3-5","n":434,"t":0.1382},{"k":"6-10","n":448,"t":0.1228},{"k":"+10","n":246,"t":0.0813}],"edad":[{"k":"18-25","n":123,"t":0.3577},{"k":"26-35","n":606,"t":0.1914},{"k":"36-45","n":468,"t":0.0919},{"k":"46-55","n":226,"t":0.115},{"k":"56+","n":47,"t":0.1702}],"heat":{"areas":["Investigación y Desarrollo","Recursos Humanos","Ventas"],"niv":["Baja","Media","Alta","Muy alta"],"v":[[{"t":0.1979,"n":192},{"t":0.1379,"n":174},{"t":0.1433,"n":300},{"t":0.0949,"n":295}],[{"t":0.4545,"n":11},{"t":0.1,"n":20},{"t":0.2,"n":15},{"t":0.1176,"n":17}],[{"t":0.2674,"n":86},{"t":0.2326,"n":86},{"t":0.2126,"n":127},{"t":0.1497,"n":147}]]}}}</script>
+<script>
+(function () {
+  const D = JSON.parse(document.getElementById('data').textContent);
+  const nf = new Intl.NumberFormat('es-AR');
+  const fmtN = v => nf.format(Math.round(v));
+  const fmtP = (v, d = 1) => (v * 100).toFixed(d).replace('.', ',') + '%';
+  const fmtM = v => (v / 1e6).toFixed(1).replace('.', ',') + ' M';
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const NS = 'http://www.w3.org/2000/svg';
+  const tip = document.getElementById('tip');
+
+  function el(tag, attrs, parent, text) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (text != null) e.textContent = text;
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function showTip(ev, title, rows) {
+    tip.innerHTML = '<b></b>' + rows.map(() => '<div class="r"><span></span><span></span></div>').join('');
+    tip.querySelector('b').textContent = title;
+    tip.querySelectorAll('.r').forEach((r, i) => { r.children[0].textContent = rows[i][0]; r.children[1].textContent = rows[i][1]; });
+    tip.hidden = false;
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    let x = ev.clientX + 14, y = ev.clientY + 14;
+    if (x + w > innerWidth - 8) x = ev.clientX - w - 14;
+    if (y + h > innerHeight - 8) y = ev.clientY - h - 14;
+    tip.style.left = x + 'px'; tip.style.top = y + 'px';
+  }
+  const hideTip = () => { tip.hidden = true; };
+  // Barra con extremo de datos redondeado (4px) y base recta
+  function barPath(x, y, w, h, horiz) {
+    const r = Math.min(4, horiz ? h / 2 : w / 2, horiz ? w : h);
+    if (w <= 0 || h <= 0) return '';
+    return horiz
+      ? `M${x},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h - r}Q${x + w},${y + h} ${x + w - r},${y + h}H${x}Z`
+      : `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`;
+  }
+  function measure(texts) {
+    const s = el('svg', {}, document.body); s.style.position = 'absolute'; s.style.visibility = 'hidden';
+    const t = el('text', { style: 'font:11px ' + css('--font') }, s);
+    let m = 0; texts.forEach(x => { t.textContent = x; m = Math.max(m, t.getComputedTextLength()); });
+    s.remove(); return m;
+  }
+
+  // ---- Barras horizontales ---------------------------------------------------
+  function hbar(id, items, o) {
+    const box = document.getElementById(id); box.innerHTML = '';
+    const W = box.clientWidth || 400, labW = Math.min(measure(items.map(d => d.k)) + 10, W * 0.42);
+    const valW = measure(items.map(d => o.fmt(d.v))) + 8;
+    const rowH = 28, bh = 18, top = o.ref ? 16 : 4, H = top + items.length * rowH + 4;
+    const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': o.aria }, box);
+    const x0 = labW, xw = W - labW - valW, max = o.max || Math.max(...items.map(d => d.v));
+    const sx = v => x0 + (v / max) * xw;
+    items.forEach((d, i) => {
+      const y = top + i * rowH, by = y + (rowH - bh) / 2;
+      el('text', { x: labW - 8, y: y + rowH / 2 + 4, 'text-anchor': 'end', class: 'lab' }, svg, d.k);
+      el('path', { d: barPath(x0, by, sx(d.v) - x0, bh, true), fill: d.color || css('--s1') }, svg);
+      el('text', { x: sx(d.v) + 5, y: y + rowH / 2 + 4, class: 'val' }, svg, o.fmt(d.v));
+      const hit = el('rect', { x: 0, y, width: W, height: rowH, fill: 'transparent' }, svg);
+      hit.addEventListener('mousemove', ev => showTip(ev, d.k, d.tip || [[o.name, o.fmt(d.v)]]));
+      hit.addEventListener('mouseleave', hideTip);
+    });
+    if (o.ref) {
+      const x = sx(o.ref.v);
+      el('line', { x1: x, x2: x, y1: top - 4, y2: H - 2, stroke: css('--ink-2'), 'stroke-width': 1 }, svg);
+      el('text', { x, y: 10, 'text-anchor': 'middle', class: 'lab' }, svg, o.ref.label);
+    }
+  }
+
+  // ---- Columnas ---------------------------------------------------------------
+  function vbar(id, items, o) {
+    const box = document.getElementById(id); box.innerHTML = '';
+    const W = box.clientWidth || 200, H = o.h || 150, top = 18, bot = 20;
+    const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': o.aria }, box);
+    const max = Math.max(...items.map(d => d.v)), band = W / items.length, bw = Math.min(24, band * 0.6);
+    el('line', { x1: 0, x2: W, y1: H - bot, y2: H - bot, stroke: css('--axis'), 'stroke-width': 1 }, svg);
+    items.forEach((d, i) => {
+      const cx = band * i + band / 2, h = (d.v / max) * (H - top - bot);
+      el('path', { d: barPath(cx - bw / 2, H - bot - h, bw, h, false), fill: d.color || css('--s1') }, svg);
+      el('text', { x: cx, y: H - bot - h - 5, 'text-anchor': 'middle', class: 'val' }, svg, o.fmt(d.v));
+      el('text', { x: cx, y: H - 5, 'text-anchor': 'middle' }, svg, d.k);
+      const hit = el('rect', { x: band * i, y: 0, width: band, height: H, fill: 'transparent' }, svg);
+      hit.addEventListener('mousemove', ev => showTip(ev, d.k, d.tip || [[o.name, o.fmt(d.v)]]));
+      hit.addEventListener('mouseleave', hideTip);
+    });
+  }
+
+  // ---- Líneas con crosshair -----------------------------------------------------
+  function line(id, series, o) {
+    const box = document.getElementById(id); box.innerHTML = '';
+    const W = box.clientWidth || 600, H = o.h || 220, l = 44, r = 14, t = 12, b = 22;
+    const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': o.aria }, box);
+    const xs = series[0].pts.map(p => p[0]), xmin = Math.min(...xs), xmax = Math.max(...xs);
+    const ymax = o.ymax, sx = x => l + (x - xmin) / (xmax - xmin) * (W - l - r), sy = y => H - b - (y / ymax) * (H - t - b);
+    o.ticks.forEach(v => {
+      el('line', { x1: l, x2: W - r, y1: sy(v), y2: sy(v), stroke: v === 0 ? css('--axis') : css('--grid'), 'stroke-width': 1 }, svg);
+      el('text', { x: l - 6, y: sy(v) + 4, 'text-anchor': 'end' }, svg, o.tickFmt(v));
+    });
+    const step = W < 500 ? 20 : 10;
+    for (let x = Math.ceil(xmin / step) * step; x <= xmax; x += step) el('text', { x: sx(x), y: H - 6, 'text-anchor': 'middle' }, svg, x);
+    series.forEach(s => {
+      const pts = s.pts.filter(p => p[1] != null);
+      el('path', { d: 'M' + pts.map(p => sx(p[0]) + ',' + sy(p[1])).join('L'), fill: 'none', stroke: s.color,
+        'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, svg);
+      const last = pts[pts.length - 1];
+      el('circle', { cx: sx(last[0]), cy: sy(last[1]), r: 4, fill: s.color, stroke: css('--surface'), 'stroke-width': 2 }, svg);
+    });
+    (o.notes || []).forEach(n => {
+      const x = sx(n.x), y = sy(n.y);
+      el('line', { x1: x, x2: x, y1: y + 6, y2: y + 30, stroke: css('--ink-2'), 'stroke-width': 1 }, svg);
+      el('text', { x, y: y + 42, 'text-anchor': 'middle', class: 'lab' }, svg, n.label);
+    });
+    const cross = el('line', { y1: t, y2: H - b, stroke: css('--axis'), 'stroke-width': 1, visibility: 'hidden' }, svg);
+    const dots = series.map(s => el('circle', { r: 4, fill: s.color, stroke: css('--surface'), 'stroke-width': 2, visibility: 'hidden' }, svg));
+    const hit = el('rect', { x: l, y: 0, width: W - l - r, height: H, fill: 'transparent' }, svg);
+    hit.addEventListener('mousemove', ev => {
+      const bb = svg.getBoundingClientRect(), px = (ev.clientX - bb.left) * (W / bb.width);
+      const xv = Math.round(xmin + (px - l) / (W - l - r) * (xmax - xmin));
+      const X = Math.max(xmin, Math.min(xmax, xv));
+      cross.setAttribute('x1', sx(X)); cross.setAttribute('x2', sx(X)); cross.setAttribute('visibility', 'visible');
+      const rows = [];
+      series.forEach((s, i) => {
+        const p = s.pts.find(q => q[0] === X);
+        if (p && p[1] != null) { dots[i].setAttribute('cx', sx(X)); dots[i].setAttribute('cy', sy(p[1])); dots[i].setAttribute('visibility', 'visible'); rows.push([s.name, o.fmt(p[1])]); }
+        else dots[i].setAttribute('visibility', 'hidden');
+      });
+      showTip(ev, o.xLabel(X), rows);
+    });
+    hit.addEventListener('mouseleave', () => { hideTip(); cross.setAttribute('visibility', 'hidden'); dots.forEach(d => d.setAttribute('visibility', 'hidden')); });
+  }
+
+  // ---- Mapa de calor ------------------------------------------------------------
+  function mix(a, b, t) {
+    const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+    const A = p(a), B = p(b);
+    return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join('');
+  }
+  function heat(id) {
+    const box = document.getElementById(id); box.innerHTML = '';
+    const H0 = D.rrhh.heat, W = box.clientWidth || 400;
+    const labW = Math.min(measure(H0.areas) + 10, W * 0.4), cw = (W - labW) / 4, ch = 40, top = 18;
+    const svg = el('svg', { viewBox: `0 0 ${W} ${top + ch * 3 + 4}`, role: 'img', 'aria-label': 'Rotación por área y satisfacción laboral' }, box);
+    const all = H0.v.flat().map(c => c.t), mn = Math.min(...all), mx = Math.max(...all);
+    const lo = css('--seq-lo'), hi = css('--seq-hi');
+    H0.niv.forEach((n, j) => el('text', { x: labW + cw * j + cw / 2, y: 12, 'text-anchor': 'middle' }, svg, n));
+    H0.areas.forEach((a, i) => {
+      el('text', { x: labW - 8, y: top + ch * i + ch / 2 + 4, 'text-anchor': 'end', class: 'lab' }, svg, a);
+      H0.v[i].forEach((c, j) => {
+        const x = labW + cw * j, y = top + ch * i;
+        el('rect', { x: x + 1, y: y + 1, width: cw - 2, height: ch - 2, rx: 3, fill: mix(lo, hi, (c.t - mn) / (mx - mn)) }, svg);
+        el('text', { x: x + cw / 2, y: y + ch / 2 + 4, 'text-anchor': 'middle', class: 'val' }, svg, fmtP(c.t, 0));
+        const hit = el('rect', { x, y, width: cw, height: ch, fill: 'transparent' }, svg);
+        hit.addEventListener('mousemove', ev => showTip(ev, a + ' · satisfacción ' + H0.niv[j].toLowerCase(), [['Rotación', fmtP(c.t)], ['Empleados', fmtN(c.n)]]));
+        hit.addEventListener('mouseleave', hideTip);
+      });
+    });
+  }
+
+  // ============================== RRHH ==============================
+  function renderRRHH() {
+    const R = D.rrhh;
+    document.getElementById('k-emp').textContent = fmtN(R.n);
+    document.getElementById('k-emp-n').textContent = fmtN(R.bajas) + ' se fueron';
+    document.getElementById('k-rot').textContent = fmtP(R.tasa);
+    document.getElementById('k-sue').textContent = fmtN(R.sueldo);
+    document.getElementById('k-he').textContent = fmtP(R.he, 0);
+    document.getElementById('h-con').textContent = fmtP(R.rot_he);
+    document.getElementById('h-sin').textContent = fmtP(R.rot_nohe);
+    document.getElementById('h-mult').textContent = (R.rot_he / R.rot_nohe).toFixed(1).replace('.', ',');
+    const P = [...R.puesto].sort((a, b) => b.t - a.t);
+    hbar('ch-puesto', P.map(p => ({ k: p.k, v: p.t, color: p.t > R.tasa ? css('--s2') : css('--emph-off'),
+      tip: [['Rotación', fmtP(p.t)], ['Empleados', fmtN(p.n)], ['vs empresa', ((p.t - R.tasa) * 100).toFixed(1).replace('.', ',') + ' pp']] })),
+      { fmt: v => fmtP(v), name: 'Rotación', ref: { v: R.tasa, label: 'Promedio empresa ' + fmtP(R.tasa) }, aria: 'Rotación por puesto' });
+    const tb = c => c.map(d => ({ k: d.k, v: d.t, tip: [['Rotación', fmtP(d.t)], ['Empleados', fmtN(d.n)]] }));
+    vbar('ch-antig', tb(R.antig), { fmt: v => fmtP(v, 0), name: 'Rotación', aria: 'Rotación por antigüedad' });
+    vbar('ch-edad', tb(R.edad), { fmt: v => fmtP(v, 0), name: 'Rotación', aria: 'Rotación por tramo de edad' });
+    heat('ch-heat');
+    const t = document.getElementById('tb-puesto');
+    t.innerHTML = '<table><thead><tr><th>Puesto</th><th>Empleados</th><th>Bajas</th><th>Rotación</th><th>Sueldo prom.</th><th>Antigüedad</th></tr></thead><tbody></tbody></table>';
+    const tbody = t.querySelector('tbody');
+    P.forEach(p => {
+      const tr = document.createElement('tr');
+      [p.k, fmtN(p.n), fmtN(p.b), fmtP(p.t), fmtN(p.s), p.a.toFixed(1).replace('.', ',') + ' años'].forEach(v => {
+        const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); });
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ============================== AGRO ==============================
+  const sel = document.getElementById('campania');
+  D.camp.slice().reverse().forEach(c => { const o = document.createElement('option'); o.value = c.campania; o.textContent = c.campania; sel.appendChild(o); });
+  try { const s = localStorage.getItem('campania'); if (s && D.camp.some(c => c.campania === s)) sel.value = s; } catch (e) {}
+
+  function renderAgroFiltrado() {
+    const c = sel.value, i = D.camp.findIndex(x => x.campania === c), C = D.camp[i], prev = D.camp[i - 1];
+    document.getElementById('k-sem').textContent = fmtM(C.sem) + ' ha';
+    document.getElementById('k-sem-n').textContent = c + ' · ' + fmtP(C.cos / C.sem, 0) + ' cosechado';
+    document.getElementById('k-prod').textContent = fmtM(C.prod) + ' t';
+    document.getElementById('k-prod-n').textContent = 'Campaña ' + c;
+    document.getElementById('k-rin').textContent = fmtN(C.pcs * 1000 / C.cos) + ' kg/ha';
+    document.getElementById('k-rin-n').textContent = 'Ponderado por superficie cosechada';
+    const kv = document.getElementById('k-var'), kn = document.getElementById('k-var-n');
+    if (prev) {
+      const v = C.prod / prev.prod - 1;
+      kv.textContent = (v >= 0 ? '▲ +' : '▼ ') + fmtP(v).replace('-', '−');
+      kv.className = 'val delta ' + (v >= 0 ? 'up' : 'down');
+      kn.textContent = 'Producción vs ' + prev.campania;
+    } else { kv.textContent = '—'; kv.className = 'val delta'; kn.textContent = 'Sin campaña anterior'; }
+    document.getElementById('sub-prov').textContent = 'Hectáreas, campaña ' + c;
+    document.getElementById('sub-grupo').textContent = 'Hectáreas, campaña ' + c + ' · 8 grupos principales';
+    const pv = D.prov[c] || {};
+    hbar('ch-prov', Object.entries(pv).map(([k, v]) => ({ k, v, tip: [['Sembrada', fmtN(v) + ' ha'], ['Del país', fmtP(v / C.sem)]] })),
+      { fmt: v => fmtM(v), name: 'Sembrada', aria: 'Superficie por provincia' });
+    const gr = D.grupo[c] || {};
+    hbar('ch-grupo', Object.entries(gr).map(([k, v]) => ({ k, v, tip: [['Sembrada', fmtN(v) + ' ha'], ['Del total', fmtP(v / C.sem)]] })),
+      { fmt: v => fmtM(v), name: 'Sembrada', aria: 'Superficie por grupo de cultivo' });
+    const sj = D.soja[c], sb = document.getElementById('sub-soja');
+    if (sj) {
+      sb.textContent = 'Hectáreas, campaña ' + c + '. La de segunda se siembra después del trigo, en el mismo lote';
+      vbar('ch-soja', Object.entries(sj).map(([k, v]) => ({ k: k.replace('Soja de ', ''), v, tip: [[k, fmtN(v) + ' ha']] })),
+        { fmt: v => fmtM(v), name: 'Sembrada', h: 170, aria: 'Soja de primera y de segunda' });
+    } else {
+      sb.textContent = 'Sin desagregar antes de la campaña 2000/2001';
+      document.getElementById('ch-soja').innerHTML = '';
+    }
+    try { localStorage.setItem('campania', c); } catch (e) {}
+  }
+  function renderAgroFijo() {
+    const pts = D.camp.map(c => [c.anio_inicio, c.prod]);
+    line('ch-prod', [{ name: 'Producción', color: css('--s1'), pts }],
+      { ymax: 160e6, ticks: [0, 40e6, 80e6, 120e6, 160e6], tickFmt: v => v / 1e6, fmt: v => fmtM(v) + ' t', h: 230,
+        xLabel: x => (D.camp.find(c => c.anio_inicio === x) || {}).campania || x,
+        notes: [{ x: 2022, y: D.camp.find(c => c.anio_inicio === 2022).prod, label: 'Sequía 2022/23: −33%' }],
+        aria: 'Producción total por campaña' });
+    const order = ['Soja', 'Maíz', 'Trigo', 'Girasol'], cols = ['--s1', '--s2', '--s3', '--s4'];
+    const years = D.camp.map(c => c.anio_inicio);
+    const series = order.map((g, i) => ({ name: g, color: css(cols[i]), pts: years.map(y => [y, D.rinde[g][y] ?? null]) }));
+    const lg = document.getElementById('lg-rinde'); lg.innerHTML = '';
+    series.forEach(s => { const sp = document.createElement('span'); const ii = document.createElement('i'); ii.style.background = s.color; sp.append(ii, s.name); lg.appendChild(sp); });
+    line('ch-rinde', series, { ymax: 8000, ticks: [0, 2000, 4000, 6000, 8000], tickFmt: v => nf.format(v), fmt: v => fmtN(v) + ' kg/ha', h: 210,
+      xLabel: x => (D.camp.find(c => c.anio_inicio === x) || {}).campania || x, aria: 'Rendimiento por grupo de cultivo' });
+    hbar('ch-pct', Object.entries(D.pctcos).map(([k, v]) => ({ k, v })), { fmt: v => fmtP(v, 0), name: '% cosechado', max: 1, aria: '% cosechado más bajo' });
+  }
+
+  // ============================== Pestañas ==============================
+  const tabs = [...document.querySelectorAll('[role=tab]')];
+  let rendered = {};
+  function render(id) {
+    if (id === 'pg-rrhh') renderRRHH();
+    if (id === 'pg-agro') { renderAgroFiltrado(); renderAgroFijo(); }
+    rendered[id] = true;
+  }
+  function select(tab) {
+    tabs.forEach(t => { const on = t === tab; t.setAttribute('aria-selected', on); document.getElementById(t.getAttribute('aria-controls')).hidden = !on; });
+    const id = tab.getAttribute('aria-controls'); render(id);
+    try { localStorage.setItem('tab', tab.id); } catch (e) {}
+  }
+  tabs.forEach(t => t.addEventListener('click', () => select(t)));
+  sel.addEventListener('change', renderAgroFiltrado);
+  let start = tabs[0];
+  const hashMap = { rrhh: 'tab-rrhh', agro: 'tab-agro', notas: 'tab-notas' };
+  try { const s = localStorage.getItem('tab'); if (s) start = document.getElementById(s) || start; } catch (e) {}
+  if (hashMap[location.hash.slice(1)]) start = document.getElementById(hashMap[location.hash.slice(1)]);
+  select(start);
+  let rt;
+  const rerender = () => { clearTimeout(rt); rt = setTimeout(() => { const t = tabs.find(x => x.getAttribute('aria-selected') === 'true'); render(t.getAttribute('aria-controls')); }, 120); };
+  addEventListener('resize', rerender);
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', rerender);
+  new MutationObserver(rerender).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+})();
+</script>

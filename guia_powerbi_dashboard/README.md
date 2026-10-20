@@ -1,5 +1,8 @@
 # Guía para acompañar el dashboard de Power BI
 
+> **Ya está hecho:** el dashboard completo que propone esta guía está en `dashboard_powerbi/`
+> (modelo, consultas, medidas, tema, vista previa y guía de clase).
+
 Para el mentor. Ideas operativas, analíticas y de diseño para ayudar a tu mentee a llevar
 `rrhh_attrition` y `estimaciones_agricolas` (las tablas de `practica_mysql_mentee/`) a un dashboard
 en Power Query + Power BI, sin resolvérselo.
